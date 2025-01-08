@@ -1,18 +1,34 @@
 import { createResource } from "@/lib/actions/resources";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { convertToCoreMessages, generateText, streamText, tool } from "ai";
+import {
+  convertToCoreMessages,
+  generateText,
+  Message,
+  streamText,
+  tool,
+} from "ai";
 import { z } from "zod";
 import { findRelevantContent } from "@/lib/ai/embedding";
+import { Pool } from "pg";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
-// Allow streaming responses up to 30 seconds
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
+
+// Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
-  const { messages } = await req.json();
+  const body = await req.json();
+  //console.log("Request body:", body);
+  const { messages, chatID, userID } = body;
+  //console.log("Messages:", messages);
+  // console.log("ChatID:", chatID);
+  // console.log("UserID:", userID);
 
   const result = streamText({
     model: google("gemini-1.5-pro-latest"),
@@ -84,8 +100,39 @@ export async function POST(req: Request) {
         execute: async ({ question }) => findRelevantContent(question),
       }),
     },
+    async onFinish({ text }) {
+      await onFinish({ text, messages });
+    },
   });
 
-  //return result.then((r) => new Response(JSON.stringify(r), { status: 200 }));  ---> generateText
+  async function onFinish({
+    text,
+    messages,
+  }: {
+    text: string;
+    messages: Message[];
+  }) {
+    try {
+      messages.push({
+        id: messages.length.toString(),
+        role: "assistant",
+        content: text,
+      });
+      const currentHistory = JSON.stringify(messages);
+      const upsertQuery = `
+        INSERT INTO chathistory ("chatID", "userID", history)
+        VALUES ($1, $2, $3)
+        ON CONFLICT ("chatID")
+        DO UPDATE SET history = EXCLUDED.history, "userID" = EXCLUDED."userID"
+      `;
+      const values = [chatID, userID, currentHistory];
+      await pool.query(upsertQuery, values);
+
+      console.log("Updated history");
+    } catch (err) {
+      console.error("DB update error:", err);
+    }
+  }
+
   return result.toDataStreamResponse();
 }
