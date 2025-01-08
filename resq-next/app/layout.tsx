@@ -18,10 +18,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <ClerkProvider>
-        <body suppressHydrationWarning className={inter.className}>
-          {children}
-        </body>
-      </ClerkProvider>
+      <body suppressHydrationWarning className={inter.className}>
+        {children}
+      </body>
+    </ClerkProvider>
     </html>
   );
 }
