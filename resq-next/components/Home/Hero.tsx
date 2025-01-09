@@ -12,7 +12,7 @@ const Hero = () => {
     <div>
       <Header />
       <div
-        className="relative isolate sm:px-6 lg:px-8 min-h-[85vh] mt-[15vh]"
+        className="relative isolate px-4 sm:px-6 lg:px-8 min-h-[85vh] mt-[15vh] flex items-center"
         style={{
           backgroundImage:
             "radial-gradient(circle at 1px 1px, rgba(30, 58, 138, 0.4) 1.5px, transparent 0)", // Dark blue (blue-900) with 0.3 opacity
@@ -59,7 +59,7 @@ const Hero = () => {
           />
         </div>
         <div className="absolute left-1/2 top-1/3 -z-50 h-[30vh] w-[70vw] -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-400 to-green-300 opacity-80 blur-[100px]" />
-        <div className="mx-auto max-w-2xl md:py-16 py-28">
+        <div className="mx-auto max-w-2xl md:py-8 py-16">
           <div className="hidden sm:mb-8 sm:flex sm:justify-center"></div>
           <div className="text-center">
             <h1 className="text-6xl font-sans font-bold translate-y-[100px] opacity-0 animate-[slideUp_1s_ease-out_forwards]">

@@ -6,14 +6,15 @@ import { footerLinks } from "./FooterLinks";
 
 export default function Footer() {
   return (
+    <div className="min-w-[100%] mx-0 px-0">
     <footer
-      className="bg-gradient-to-b from-teal-600 to-teal-700 text-white  transition-all duration-300 ease-in-out "
+      className="bg-gradient-to-b from-teal-600 to-teal-700 text-white  transition-all duration-300 ease-in-out min-w-full mx-0 z-10"
       aria-labelledby="footer-heading"
     >
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
-      <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+      <div className="mx-auto max-w-7xl  px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8">
             <div className="flex items-center">
@@ -98,5 +99,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    </div>
   );
 }
