@@ -4,10 +4,16 @@ import {
   convertToCoreMessages,
   generateObject,
 } from "ai";
+import { embed } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { auth } from "@clerk/nextjs/server";
 import { Pool } from "pg";
-import { z } from "zod";
+import { Index } from "@upstash/vector";
+
+const index = new Index({
+  url: process.env.UPSTASH_VECTOR_REST_URL,
+  token: process.env.UPSTASH_VECTOR_REST_TOKEN,
+});
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_API_KEY,
@@ -21,23 +27,33 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { messages, email, name, phone } = body;
 
-  const text = await generateObject({
+  const text = await generateText({
     model: google("gemini-1.5-pro-latest"),
     system: `You are health assistant.
         You have to analyze the prescription carefully and
-        provide the doctor profession class name.
-        Example 1 - If the prescription has issues related to eyes, then you have to return "Ophthalmologist".
-        Example 2 - If the prescription has issues related to heart, then you have to return "Cardiologist".
-        Example 3 - If the prescription has issues related to brain, then you have to return "Neurologist".
-        Example 4 - If the prescription has issues related to bones, then you have to return "Orthopedic".
-        `,
+        provide the single line summary with all important keywords.`,
     messages: convertToCoreMessages(messages),
-    schema: z.object({
-      class: z.string(),
-    }),
+    maxSteps: 3,
   });
 
-  const class_name = text.object.class.toLowerCase();
+  console.log("Generated text:", text.text);
+
+  const { embedding: queryEmbedding } = await embed({
+    model: google.textEmbeddingModel("text-embedding-004", {
+      outputDimensionality: 512,
+    }),
+    value: text.text,
+  });
+
+  const results = await index.query({
+    vector: queryEmbedding,
+    topK: 1, // number of similar items to retrieve
+    includeVectors: true,
+    includeMetadata: true,
+  });
+  console.log(results[0].metadata?.class);
+
+  const class_name = results[0].metadata?.class;
   console.log("Class name:", class_name);
   const { userId } = await auth();
 

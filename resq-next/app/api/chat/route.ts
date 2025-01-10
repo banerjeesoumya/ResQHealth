@@ -5,14 +5,21 @@ import {
   generateText,
   Message,
   streamText,
+  experimental_wrapLanguageModel as wrapLanguageModel,
   tool,
 } from "ai";
 import { z } from "zod";
 import { findRelevantContent } from "@/lib/ai/embedding";
 import { Pool } from "pg";
+import { cacheMiddleware } from "@/lib/ai/middleware";
+
+const googleApiKey = process.env.GOOGLE_API_KEY;
+if (!googleApiKey) {
+  throw new Error("GOOGLE_API_KEY is not defined");
+}
 
 const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_API_KEY,
+  apiKey: googleApiKey,
 });
 
 const pool = new Pool({
@@ -21,6 +28,11 @@ const pool = new Pool({
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 60;
+
+const wrappedModel = wrapLanguageModel({
+  model: google("gemini-1.5-pro-latest"),
+  middleware: cacheMiddleware,
+});
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -31,8 +43,8 @@ export async function POST(req: Request) {
   // console.log("UserID:", userID);
 
   const result = streamText({
-    model: google("gemini-1.5-pro-latest"),
-    system: `You are a knowledgeable and empathetic health assistant. 
+    model: wrappedModel,
+    system: `You are a knowledgeable and empathetic health assistant. Your name is ResQ health agent.
     Respond clearly in 10-100 words, but you may extend it to 200 words including points if detailed answer is needed, focusing on essentials and avoiding unnecessary details.
     You have access to some tools like addInformation, getInformation, isHarmful to answer.`,
     messages: convertToCoreMessages(messages),

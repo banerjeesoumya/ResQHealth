@@ -4,6 +4,7 @@ import { useChat } from "ai/react";
 import Image from "next/image";
 import Sidebar from "@/components/shared/sidebar";
 import { sidebarItems } from "@/lib/items/sidebarItems";
+import { useUser } from "@clerk/nextjs";
 
 export default function Telemedicine() {
   const [doctorDetails, setDoctorDetails] = useState<any>(null);
@@ -18,25 +19,39 @@ export default function Telemedicine() {
     api: "/api/telemedicine",
   });
 
+  const { user } = useUser();
+
   useEffect(() => {
     const fetchDoctorDetails = async () => {
+      if (!user?.id) {
+        console.error("User ID is not present");
+        return;
+      }
+
+      console.log("User ID:", user.id);
+
       try {
-        const response = await fetch("/api/doctor-details", {
-          method: "GET",
+        const response = await fetch(`/api/doctor-details`, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({ userId: user.id }),
         });
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch doctor details");
+        }
 
         const data = await response.json();
         setDoctorDetails(data);
       } catch (error) {
-        console.error("Failed to fetch doctor details:", error);
+        console.error("Error fetching doctor details:", error);
       }
     };
 
     fetchDoctorDetails();
-  }, []);
+  }, [user]);
 
   return (
     <div className="flex h-screen">
@@ -69,8 +84,6 @@ export default function Telemedicine() {
                   phone: phone,
                 },
               });
-
-              //setFiles(undefined);
 
               if (fileInputRef.current) {
                 fileInputRef.current.value = "";
