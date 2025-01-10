@@ -1,0 +1,39 @@
+name: Build, Lint on PR and Push 
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          
+      - name: Navigate to resq-next
+        working-directory: ./resq-next
+        run: echo "Moved to resq-next directory"
+
+      - name: Set Environment Variables
+        working-directory: ./resq-next
+        run: echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> $GITHUB_ENV
+
+      - name: Install Dependencies
+        working-directory: ./resq-next
+        run: npm install
+      
+      - name: Lint Test
+        working-directory: ./resq-next
+        run: npm run lint
+        
+      - name: Generate Drizzle Client
+        working-directory: ./resq-next
+        run: npm run db:generate

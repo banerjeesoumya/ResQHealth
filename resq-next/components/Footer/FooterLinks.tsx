@@ -8,7 +8,7 @@ export const footerLinks = {
     { name: "Team Ignite", href: "#" },
     {
       name: "Presentation",
-      href: "https://docs.google.com/presentation/d/19QsGdVuS2fBfYoLF8Y_-qwiacij1RehAgOy20qIUb3k",
+      href: "https://www.canva.com/design/DAGbt2Z-S20/3PkoGelaViknqiQu8tcedg/view?utm_content=DAGbt2Z-S20&utm_campaign=designshare&utm_medium=link2&utm_source=uniquelinks&utlId=h58bada85be",
     },
     { name: "Demo", href: "https://www.youtube.com/watch?v=O5iZHVufFL8" },
   ],
